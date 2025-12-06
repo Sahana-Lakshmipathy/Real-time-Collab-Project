@@ -1,0 +1,60 @@
+# -------------------------
+# FastAPI Core
+# -------------------------
+fastapi
+uvicorn[standard]
+
+# -------------------------
+# Database + ORM
+# -------------------------
+SQLAlchemy
+asyncpg            # Required for Neon async connection pool
+psycopg2-binary    # For Alembic migrations
+alembic
+
+# -------------------------
+# Redis (Realtime + Caching)
+# -------------------------
+redis
+
+# -------------------------
+# Authentication / Security
+# -------------------------
+python-jose
+bcrypt
+passlib[bcrypt]
+
+# -------------------------
+# Pydantic / Validation
+# -------------------------
+pydantic
+pydantic-settings
+
+# -------------------------
+# Background Tasks / Queue
+# -------------------------
+rq
+
+# -------------------------
+# Rate Limiting / CORS
+# -------------------------
+slowapi
+starlette
+fastapi-limiter
+
+# -------------------------
+# Observability / Monitoring
+# -------------------------
+sentry-sdk[fastapi]
+loguru
+
+# -------------------------
+# Env + Utils
+# -------------------------
+python-dotenv
+
+# -------------------------
+# Gunicorn Worker (Production)
+# -------------------------
+gunicorn
+pipdeptree
