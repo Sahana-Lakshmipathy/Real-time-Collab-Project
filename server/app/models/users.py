@@ -8,8 +8,8 @@ class User(Base):
     __table_args__ = {"schema": "collab"}
 
     id = Column(String, primary_key=True)
-    username = Column(String, nullable=False)
-    email = Column(String, nullable=True)
+    username = Column(String, unique=True, nullable=False)
+    email = Column(String, unique=True, nullable=False)
     avatar_url = Column(String, nullable=True)
     password_hash = Column(String, nullable=False)
     created_at = Column(TIMESTAMP, server_default=text("now()"))

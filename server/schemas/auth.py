@@ -4,14 +4,14 @@ from pydantic import BaseModel
 class SignupRequest(BaseModel):
     id: str
     username: str
-    email: str | None = None
+    email: str
     avatar_url: str | None = None
     password: str
 
 
 class LoginRequest(BaseModel):
-    id: str
-    password: str
+    login: str              # <-- can be username OR email
+    password: str           # required
 
 
 class TokenResponse(BaseModel):

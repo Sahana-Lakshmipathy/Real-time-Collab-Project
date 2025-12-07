@@ -32,16 +32,25 @@ class AuthService:
 
     @staticmethod
     async def login(db: AsyncSession, data: LoginRequest):
-        result = await db.execute(select(User).where(User.id == data.id))
-        user = result.scalars().first()
+        login_value = data.login
+
+        # Try to match username OR email
+        stmt = (
+            select(User)
+            .where((User.username == login_value) | (User.email == login_value))
+        )
+        result = await db.execute(stmt)
+        user = result.scalar_one_or_none()
 
         if not user:
-            return None, "Invalid user ID"
+            return None, "Invalid credentials"
 
+        # Check password
         if not verify_password(data.password, user.password_hash):
-            return None, "Invalid password"
+            return None, "Invalid credentials"
 
-        # Create JWT
+        # Generate JWT
         token = create_access_token({"sub": user.id})
-
         return token, None
+
+
