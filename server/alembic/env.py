@@ -2,74 +2,81 @@ import sys
 import os
 from logging.config import fileConfig
 
-from sqlalchemy import engine_from_config, pool
-import sqlalchemy as sa
 from alembic import context
+from sqlalchemy import engine_from_config, pool, text
+import sqlalchemy as sa
 
 # ---------------------------------------------------------------------
 # 1. Fix import path so Alembic can find "app"
 # ---------------------------------------------------------------------
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+print(f"[ENV] BASE_DIR added to path: {BASE_DIR}")
+
 if BASE_DIR not in sys.path:
     sys.path.insert(0, BASE_DIR)
 
 # ---------------------------------------------------------------------
-# 2. Import Base + ALL models (via __init__.py autoload)
+# 2. Import Base + all models
 # ---------------------------------------------------------------------
-from app.core.database import Base
-import app.models         # <-- This imports all your model modules
-from app.core.config import get_settings
+try:
+    from app.core.database import Base
+    import app.models        # auto-imports via __init__
+    from app.core.config import get_settings
+except Exception as e:
+    print(f"[ENV] ERROR importing app modules: {e}")
+    raise
 
 # ---------------------------------------------------------------------
-# 3. Alembic Config object
+# 3. Alembic configuration
 # ---------------------------------------------------------------------
-# Alembic Config
 config = context.config
 settings = get_settings()
 
-# Convert async DB URL to sync DB URL for Alembic
+# Convert async URL → sync URL for Alembic
 ASYNC_URL = settings.DATABASE_URL
-SYNC_URL = ASYNC_URL.replace("+asyncpg", "")   # <-- FIX HERE
+if "+asyncpg" in ASYNC_URL:
+    SYNC_URL = ASYNC_URL.replace("postgresql+asyncpg://", "postgresql://")
+else:
+    SYNC_URL = ASYNC_URL
 
 config.set_main_option("sqlalchemy.url", SYNC_URL)
+print(f"[ENV] Using SYNC DB URL for Alembic: {SYNC_URL}")
 
-
-# ---------------------------------------------------------------------
-# 4. Configure logging
-# ---------------------------------------------------------------------
-if config.config_file_name is not None:
+# Logging
+if config.config_file_name:
     fileConfig(config.config_file_name)
 
 # ---------------------------------------------------------------------
-# 5. Target metadata for autogenerate
+# 4. Metadata for autogenerate
 # ---------------------------------------------------------------------
 target_metadata = Base.metadata
 
+print(f"[ENV] Metadata tables detected ({len(target_metadata.tables)}):")
+for t in target_metadata.tables:
+    print(f"   - {t}")
 
 # ---------------------------------------------------------------------
-# 6. Offline migration mode
+# 5. Offline migration mode
 # ---------------------------------------------------------------------
 def run_migrations_offline():
-    """Run migrations in 'offline' mode'."""
     url = config.get_main_option("sqlalchemy.url")
     context.configure(
         url=url,
         target_metadata=target_metadata,
-        literal_binds=True,
-        include_schemas=True,         # <-- important for schema-based models
-        dialect_opts={"paramstyle": "named"},
+        include_schemas=True,
         version_table_schema="collab",
+        literal_binds=True,
+        dialect_opts={"paramstyle": "named"},
     )
 
     with context.begin_transaction():
         context.run_migrations()
 
-
 # ---------------------------------------------------------------------
-# 7. Online migration mode
+# 6. Online migration mode
 # ---------------------------------------------------------------------
 def run_migrations_online():
-    """Run migrations in 'online' mode'."""
+    print("[ENV] Starting ONLINE migrations...")
 
     connectable = engine_from_config(
         config.get_section(config.config_ini_section),
@@ -78,13 +85,9 @@ def run_migrations_online():
     )
 
     with connectable.connect() as connection:
-
-        # -------------------------------
-        # CRITICAL FIX FOR YOUR PROJECT:
-        # Alembic cannot compare metadata
-        # for a schema that doesn't exist.
-        # -------------------------------
-        connection.execute(sa.text("CREATE SCHEMA IF NOT EXISTS collab"))
+        print("[ENV] Ensuring schema 'collab' exists...")
+        connection.execute(text("CREATE SCHEMA IF NOT EXISTS collab"))
+        connection.commit()
 
         context.configure(
             connection=connection,
@@ -98,9 +101,8 @@ def run_migrations_online():
         with context.begin_transaction():
             context.run_migrations()
 
-
 # ---------------------------------------------------------------------
-# 8. Entrypoint
+# 7. Entrypoint
 # ---------------------------------------------------------------------
 if context.is_offline_mode():
     run_migrations_offline()
