@@ -13,7 +13,7 @@ class Message(Base):
     channel_id = Column(UUID(as_uuid=True), ForeignKey("collab.channels.id"))
     user_id = Column(String, ForeignKey("collab.users.id"))
     content = Column(Text, nullable=False)
-    metadata = Column(JSONB)
+    meta_data = Column(JSONB)
     created_at = Column(TIMESTAMP, server_default=func.now())
 
     # Relationships

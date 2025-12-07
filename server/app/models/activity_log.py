@@ -11,7 +11,7 @@ class ActivityLog(Base):
     id = Column(BIGINT, primary_key=True, autoincrement=True)
     user_id = Column(String, ForeignKey("collab.users.id"))
     action = Column(String, nullable=False)
-    metadata = Column(JSONB)
+    meta_data = Column(JSONB)
     created_at = Column(TIMESTAMP, server_default=func.now())
 
     # Relationship
