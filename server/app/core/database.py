@@ -17,7 +17,8 @@ class Base(DeclarativeBase):
 engine = create_async_engine(
     settings.DATABASE_URL,
     echo=False,           # set True for SQL debug logs
-    future=True
+    future=True,
+    pool_pre_ping=True 
 )
 
 # ----------------------------------------
@@ -42,3 +43,14 @@ async def init_db():
             text(f"CREATE SCHEMA IF NOT EXISTS {settings.DB_SCHEMA}")
         )
         # tables created later by alembic migrations
+# ----------------------------------------
+# Dependency for FastAPI routes
+# Provides an async DB session per request
+# ----------------------------------------
+async def get_db():
+    async with SessionLocal() as session:
+        try:
+            yield session
+        finally:
+            await session.close()
+

@@ -3,7 +3,8 @@ from functools import lru_cache
 
 class Settings(BaseSettings):
     DATABASE_URL: str
-    DB_SCHEMA: str = "collab"   # default schema for our project
+    DB_SCHEMA: str = "collab" 
+    SECRET_KEY: str  # secret key for our project
 
     class Config:
         env_file = ".env"
